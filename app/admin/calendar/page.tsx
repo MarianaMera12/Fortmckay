@@ -23,6 +23,7 @@ export default function CalendarPage() {
   const [editing, setEditing] = useState<ClassWithCount | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [viewing, setViewing] = useState<ClassWithCount | null>(null);
+  const [error, setError] = useState("");
 
   const weekStart = useMemo(
     () => addDays(startOfWeek(new Date()), offset * 7),
@@ -30,15 +31,25 @@ export default function CalendarPage() {
   );
 
   const load = useCallback(() => {
-    listWeekClasses(weekStart).then(setClasses).catch(() => setClasses([]));
+    setError("");
+    listWeekClasses(weekStart)
+      .then(setClasses)
+      .catch(() => {
+        setClasses([]);
+        setError("Could not load classes. Please try again.");
+      });
   }, [weekStart]);
 
   useEffect(load, [load]);
 
   async function remove(c: ClassWithCount) {
     if (!confirm(`Delete "${c.name}"? Its reservations will be removed too.`)) return;
-    await deleteClass(c.id);
-    load();
+    try {
+      await deleteClass(c.id);
+      load();
+    } catch {
+      setError("Could not delete this class. Please try again.");
+    }
   }
 
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -110,6 +121,7 @@ export default function CalendarPage() {
         </div>
 
         <Card>
+          {error && <p className="mb-4 text-[13.5px] text-danger">{error}</p>}
           <table className="w-full text-left text-[14.5px]">
             <thead>
               <tr className="text-[13px] tracking-widest text-black/45">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ReserveModal } from "@/components/public/ReserveModal";
+import { ReserveModal } from "@/components/community/ReserveModal";
 import { Button } from "@/components/ui/Button";
 import { listWeekClasses } from "@/lib/queries/classes";
 import type { ClassWithCount } from "@/lib/types";

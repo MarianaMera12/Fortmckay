@@ -21,16 +21,10 @@ export function Sidebar({ email }: { email: string }) {
   }
 
   return (
-    <aside className="flex w-[230px] shrink-0 flex-col bg-sidebar py-6 text-white">
+    <aside className="flex w-[230px] shrink-0 flex-col bg-sidebar py-6 text-white sticky top-0 h-screen">
       <div className="mb-6 flex items-center gap-3 border-b border-white/10 px-5 pb-5">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full border border-gold/60 font-display text-base text-[#e6dcc8]">
-          FM
-        </span>
-        <span className="font-display leading-tight">
-          <span className="block text-[19px] tracking-[2.5px]">FORT McKAY</span>
-          <span className="block text-[9.5px] tracking-[3px] text-white/50">
-            FIRST NATION
-          </span>
+        <span className="flex  items-center justify-center">
+          <img src="/logo.png" alt="Logo" className="object-contain" />
         </span>
       </div>
 

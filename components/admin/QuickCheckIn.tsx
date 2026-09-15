@@ -15,18 +15,25 @@ export function QuickCheckIn({ onChanged }: { onChanged?: () => void }) {
   const [results, setResults] = useState<Member[]>([]);
   const [open, setOpen] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
     if (!debounced.trim()) {
       setResults([]);
+      setError("");
       return;
     }
-    searchMembers(debounced).then(async (rows) => {
-      if (!active) return;
-      setResults(rows);
-      setOpen(await getOpenSessions(rows.map((r) => r.id)));
-    });
+    setError("");
+    searchMembers(debounced)
+      .then(async (rows) => {
+        if (!active) return;
+        setResults(rows);
+        setOpen(await getOpenSessions(rows.map((r) => r.id)));
+      })
+      .catch(() => {
+        if (active) setError("Could not search members. Please try again.");
+      });
     return () => {
       active = false;
     };
@@ -34,12 +41,18 @@ export function QuickCheckIn({ onChanged }: { onChanged?: () => void }) {
 
   async function toggle(member: Member) {
     setBusyId(member.id);
-    const session = open[member.id];
-    if (session) await checkOut(session);
-    else await checkIn(member.id);
-    setOpen(await getOpenSessions(results.map((r) => r.id)));
-    setBusyId(null);
-    onChanged?.();
+    setError("");
+    try {
+      const session = open[member.id];
+      if (session) await checkOut(session);
+      else await checkIn(member.id);
+      setOpen(await getOpenSessions(results.map((r) => r.id)));
+      onChanged?.();
+    } catch {
+      setError("Could not update attendance. Please try again.");
+    } finally {
+      setBusyId(null);
+    }
   }
 
   return (
@@ -49,6 +62,7 @@ export function QuickCheckIn({ onChanged }: { onChanged?: () => void }) {
         onChange={setTerm}
         placeholder="Search name, member ID or phone…"
       />
+      {error && <p className="mt-3 text-[13.5px] text-danger">{error}</p>}
 
       <ul className="mt-3 divide-y divide-black/5">
         {results.map((m) => {

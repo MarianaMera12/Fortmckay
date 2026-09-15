@@ -11,9 +11,16 @@ import { formatTimestamp } from "@/lib/utils";
 
 export default function CheckInPage() {
   const [rows, setRows] = useState<AttendanceWithMember[]>([]);
+  const [error, setError] = useState("");
 
   const load = useCallback(() => {
-    listRecentActivity(15).then(setRows).catch(() => setRows([]));
+    setError("");
+    listRecentActivity(15)
+      .then(setRows)
+      .catch(() => {
+        setRows([]);
+        setError("Could not load check-in activity. Please try again.");
+      });
   }, []);
 
   useEffect(load, [load]);
@@ -30,6 +37,7 @@ export default function CheckInPage() {
 
         <Card>
           <CardTitle>Recent check activity</CardTitle>
+          {error && <p className="mb-4 text-[13.5px] text-danger">{error}</p>}
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-black/5 text-[13px] tracking-widest text-black/45">

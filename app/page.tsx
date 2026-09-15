@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PublicSchedule } from "@/components/public/PublicSchedule";
+import { PublicSchedule } from "@/components/community/PublicSchedule";
 
 export default function PublicPortalPage() {
   return (

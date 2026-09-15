@@ -27,14 +27,19 @@ export default function MembersPage() {
   const [total, setTotal] = useState(0);
   const [editing, setEditing] = useState<Member | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [error, setError] = useState("");
 
   const load = useCallback(() => {
+    setError("");
     listMembers({ search: debounced, status, page })
       .then(({ rows, total }) => {
         setRows(rows);
         setTotal(total);
       })
-      .catch(() => setRows([]));
+      .catch(() => {
+        setRows([]);
+        setError("Could not load members. Check your connection and try again.");
+      });
   }, [debounced, status, page]);
 
   useEffect(load, [load]);
@@ -42,8 +47,12 @@ export default function MembersPage() {
 
   async function deactivate(m: Member) {
     if (!confirm(`Deactivate ${fullName(m)}?`)) return;
-    await deactivateMember(m.id);
-    load();
+    try {
+      await deactivateMember(m.id);
+      load();
+    } catch {
+      setError("Could not deactivate this member. Please try again.");
+    }
   }
 
   const pages = Math.max(1, Math.ceil(total / MEMBERS_PAGE_SIZE));
@@ -81,6 +90,7 @@ export default function MembersPage() {
         </Card>
 
         <Card>
+          {error && <p className="mb-4 text-[13.5px] text-danger">{error}</p>}
           <table className="w-full text-left">
             <thead>
               <tr className="text-[14.5px] text-black/45">

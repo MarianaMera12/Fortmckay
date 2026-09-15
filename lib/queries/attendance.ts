@@ -36,8 +36,8 @@ export async function getOpenSessions(memberIds: string[]): Promise<Record<strin
     .in("member_id", memberIds);
   if (error) throw error;
   const map: Record<string, string> = {};
-  (data ?? []).forEach((row) => {
-    map[row.member_id as string] = row.id as string;
+  ((data ?? []) as unknown as { id: string; member_id: string }[]).forEach((row) => {
+    map[row.member_id] = row.id;
   });
   return map;
 }
