@@ -8,6 +8,9 @@ export interface Member {
   email: string | null;
   membership_status: MembershipStatus;
   member_id: string | null;
+  date_of_birth: string | null;
+  address: string | null;
+  medical_info: string | null;
   created_at: string;
 }
 
@@ -56,6 +59,22 @@ export interface MemberInput {
   email: string;
   membership_status: MembershipStatus;
   member_id: string;
+  date_of_birth: string;
+  address: string;
+  medical_info: string;
+}
+
+export interface Consent {
+  id: string;
+  member_id: string;
+  full_name: string;
+  email: string | null;
+  phone: string;
+  date_of_birth: string | null;
+  address: string | null;
+  medical_info: string | null;
+  waiver_version: string;
+  accepted_at: string;
 }
 
 export interface ClassInput {

@@ -9,6 +9,12 @@ Next.js 14 (App Router) + React + TypeScript + Tailwind + Supabase + Recharts.
 4. Crea el usuario del staff en Supabase Auth (Authentication > Users > Add user).
 5. `npm run dev`
 
+## Migraciones
+Si el proyecto de Supabase ya estaba creado antes de un cambio de esquema,
+corre los archivos nuevos en `supabase/migrations/` (en orden) en el SQL
+Editor — `schema.sql` solo refleja el estado completo para instalaciones
+nuevas.
+
 ## Rutas
 - `/` portal publico: calendario semanal + reservas sin cuenta.
 - `/login` acceso staff (Supabase Auth, email + password).

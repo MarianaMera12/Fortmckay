@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/admin/PageHeader";
 import { MemberFormModal } from "@/components/admin/MemberFormModal";
+import { ViewConsentModal } from "@/components/admin/ViewConsentModal";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { MembershipChip } from "@/components/ui/StatusChip";
@@ -27,6 +28,7 @@ export default function MembersPage() {
   const [total, setTotal] = useState(0);
   const [editing, setEditing] = useState<Member | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewingConsent, setViewingConsent] = useState<Member | null>(null);
   const [error, setError] = useState("");
 
   const load = useCallback(() => {
@@ -121,6 +123,9 @@ export default function MembersPage() {
                   </td>
                   <td className="py-3 text-right">
                     <span className="inline-flex gap-4">
+                      <button onClick={() => setViewingConsent(m)} title="View consent">
+                        📄
+                      </button>
                       <button
                         onClick={() => {
                           setEditing(m);
@@ -182,6 +187,12 @@ export default function MembersPage() {
           setModalOpen(false);
           load();
         }}
+      />
+
+      <ViewConsentModal
+        open={!!viewingConsent}
+        member={viewingConsent}
+        onClose={() => setViewingConsent(null)}
       />
     </>
   );

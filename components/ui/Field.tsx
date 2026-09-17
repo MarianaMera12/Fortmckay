@@ -23,6 +23,29 @@ export function Field({ label, value, onChange, placeholder, type = "text" }: Fi
   );
 }
 
+interface TextareaProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  rows?: number;
+}
+
+export function TextareaField({ label, value, onChange, placeholder, rows = 3 }: TextareaProps) {
+  return (
+    <label className="flex flex-col gap-1.5 text-[13.5px] text-black/55">
+      {label}
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        rows={rows}
+        className="rounded-xl border border-black/10 bg-cream px-3 py-2.5 text-[15px] text-ink outline-none focus:border-blue"
+      />
+    </label>
+  );
+}
+
 interface SelectProps<T extends string> {
   label: string;
   value: T;

@@ -52,11 +52,22 @@ export async function searchMembers(term: string, limit = 6): Promise<Member[]> 
   return (data ?? []) as Member[];
 }
 
+function toRow(input: MemberInput) {
+  return {
+    ...input,
+    email: input.email || null,
+    member_id: input.member_id || null,
+    date_of_birth: input.date_of_birth || null,
+    address: input.address || null,
+    medical_info: input.medical_info || null,
+  };
+}
+
 export async function createMember(input: MemberInput): Promise<Member> {
   const supabase = createClient();
   const { data, error } = await supabase
     .from("members")
-    .insert({ ...input, email: input.email || null, member_id: input.member_id || null })
+    .insert(toRow(input))
     .select()
     .single();
   if (error) throw error;
@@ -65,10 +76,7 @@ export async function createMember(input: MemberInput): Promise<Member> {
 
 export async function updateMember(id: string, input: MemberInput): Promise<void> {
   const supabase = createClient();
-  const { error } = await supabase
-    .from("members")
-    .update({ ...input, email: input.email || null, member_id: input.member_id || null })
-    .eq("id", id);
+  const { error } = await supabase.from("members").update(toRow(input)).eq("id", id);
   if (error) throw error;
 }
 

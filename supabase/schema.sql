@@ -11,6 +11,9 @@ create table if not exists public.members (
   membership_status text not null default 'active'
                     check (membership_status in ('active','paused','inactive')),
   member_id         text unique,
+  date_of_birth     date,
+  address           text,
+  medical_info      text,
   created_at        timestamptz not null default now()
 );
 
@@ -65,6 +68,25 @@ create table if not exists public.reservations (
 
 create index if not exists reservations_class_idx on public.reservations (class_id);
 
+-- CONSENTS (waiver acceptance) -------------------------------------------
+-- Immutable snapshot of what the member accepted: the data they signed
+-- with, plus which waiver text version, so the PDF can be regenerated
+-- identically at any time even if the waiver wording changes later.
+create table if not exists public.consents (
+  id             uuid primary key default gen_random_uuid(),
+  member_id      uuid not null references public.members (id) on delete cascade,
+  full_name      text not null,
+  email          text,
+  phone          text not null,
+  date_of_birth  date,
+  address        text,
+  medical_info   text,
+  waiver_version text not null,
+  accepted_at    timestamptz not null default now()
+);
+
+create index if not exists consents_member_idx on public.consents (member_id);
+
 -- CAPACITY-SAFE PUBLIC RESERVATION --------------------------------------
 -- Locks the class row so two simultaneous requests cannot overbook.
 create or replace function public.reserve_class(
@@ -106,6 +128,7 @@ alter table public.members     enable row level security;
 alter table public.attendance  enable row level security;
 alter table public.classes     enable row level security;
 alter table public.reservations enable row level security;
+alter table public.consents    enable row level security;
 
 -- Staff (any authenticated user) manages everything.
 create policy "staff manage members" on public.members
@@ -121,6 +144,9 @@ create policy "staff read reservations" on public.reservations
   for select to authenticated using (true);
 
 create policy "staff manage reservations" on public.reservations
+  for all to authenticated using (true) with check (true);
+
+create policy "staff manage consents" on public.consents
   for all to authenticated using (true) with check (true);
 
 -- Public portal: read the schedule only. Reservations go through

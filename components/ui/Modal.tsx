@@ -8,9 +8,15 @@ interface Props {
   subtitle?: string;
   onClose: () => void;
   children: ReactNode;
+  size?: "md" | "lg";
 }
 
-export function Modal({ open, title, subtitle, onClose, children }: Props) {
+const widths: Record<"md" | "lg", string> = {
+  md: "max-w-lg",
+  lg: "max-w-2xl",
+};
+
+export function Modal({ open, title, subtitle, onClose, children, size = "md" }: Props) {
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -30,7 +36,7 @@ export function Modal({ open, title, subtitle, onClose, children }: Props) {
       onClick={onClose}
     >
       <div
-        className="max-h-[88vh] w-full max-w-lg overflow-auto rounded-[18px] bg-white p-7"
+        className={`max-h-[88vh] w-full ${widths[size]} overflow-auto rounded-[18px] bg-white p-7`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-1 flex items-start justify-between gap-4">
