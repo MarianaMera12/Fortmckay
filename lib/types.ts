@@ -8,9 +8,10 @@ export interface Member {
   email: string | null;
   membership_status: MembershipStatus;
   member_id: string | null;
-  date_of_birth: string | null;
+  date_of_birth?: string | null;
   address: string | null;
   medical_info: string | null;
+  has_consent: boolean | null;
   created_at: string;
 }
 
@@ -62,19 +63,17 @@ export interface MemberInput {
   date_of_birth: string;
   address: string;
   medical_info: string;
+  has_consent: boolean;
 }
 
 export interface Consent {
   id: string;
   member_id: string;
-  full_name: string;
-  email: string | null;
-  phone: string;
-  date_of_birth: string | null;
-  address: string | null;
-  medical_info: string | null;
-  waiver_version: string;
   accepted_at: string;
+  members?: Pick<
+    Member,
+    "first_name" | "last_name" | "phone" | "email" | "member_id" | "date_of_birth" | "address" | "medical_info"
+  > | null;
 }
 
 export interface ClassInput {

@@ -43,18 +43,21 @@ export function ViewConsentModal({ open, member, onClose }: Props) {
       {consent && (
         <>
           <div className="mb-4 rounded-xl bg-cream p-4 text-[13.5px]">
-            <p className="font-medium">{consent.full_name}</p>
-            <p className="text-black/55">
-              {consent.email || "—"} · {consent.phone}
-              {consent.date_of_birth ? ` · DOB ${consent.date_of_birth}` : ""}
+            <p className="font-medium">
+              {consent.members
+                ? `${consent.members.first_name} ${consent.members.last_name}`.trim()
+                : "Member"}
             </p>
-            {consent.address && <p className="text-black/55">{consent.address}</p>}
-            {consent.medical_info && (
-              <p className="mt-1 text-black/55">Medical info: {consent.medical_info}</p>
+            <p className="text-black/55">
+              {consent.members?.email || "—"} · {consent.members?.phone || "—"}
+              {consent.members?.date_of_birth ? ` · DOB ${consent.members.date_of_birth}` : ""}
+            </p>
+            {consent.members?.address && <p className="text-black/55">{consent.members.address}</p>}
+            {consent.members?.medical_info && (
+              <p className="mt-1 text-black/55">Medical info: {consent.members.medical_info}</p>
             )}
             <p className="mt-2 text-black/40">
-              Accepted {new Date(consent.accepted_at).toLocaleString()} · waiver{" "}
-              {consent.waiver_version}
+              Accepted {new Date(consent.accepted_at).toLocaleString()}
             </p>
           </div>
 

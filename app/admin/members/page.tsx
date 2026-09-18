@@ -11,7 +11,7 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { useDebounce } from "@/lib/hooks/useDebounce";
 import {
   MEMBERS_PAGE_SIZE,
-  deactivateMember,
+  deleteMember,
   listMembers,
 } from "@/lib/queries/members";
 import type { Member, MembershipStatus } from "@/lib/types";
@@ -47,13 +47,13 @@ export default function MembersPage() {
   useEffect(load, [load]);
   useEffect(() => setPage(0), [debounced, status]);
 
-  async function deactivate(m: Member) {
-    if (!confirm(`Deactivate ${fullName(m)}?`)) return;
+  async function removeMember(m: Member) {
+    if (!confirm(`Delete ${fullName(m)}? This cannot be undone.`)) return;
     try {
-      await deactivateMember(m.id);
+      await deleteMember(m.id);
       load();
     } catch {
-      setError("Could not deactivate this member. Please try again.");
+      setError("Could not delete this member. Please try again.");
     }
   }
 
@@ -136,8 +136,8 @@ export default function MembersPage() {
                         ✎
                       </button>
                       <button
-                        onClick={() => void deactivate(m)}
-                        title="Deactivate"
+                        onClick={() => void removeMember(m)}
+                        title="Delete member"
                         className="text-danger"
                       >
                         ✕

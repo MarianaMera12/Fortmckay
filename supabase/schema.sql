@@ -11,9 +11,9 @@ create table if not exists public.members (
   membership_status text not null default 'active'
                     check (membership_status in ('active','paused','inactive')),
   member_id         text unique,
-  date_of_birth     date,
   address           text,
   medical_info      text,
+  has_consent       bool not null default true,
   created_at        timestamptz not null default now()
 );
 
@@ -73,16 +73,9 @@ create index if not exists reservations_class_idx on public.reservations (class_
 -- with, plus which waiver text version, so the PDF can be regenerated
 -- identically at any time even if the waiver wording changes later.
 create table if not exists public.consents (
-  id             uuid primary key default gen_random_uuid(),
-  member_id      uuid not null references public.members (id) on delete cascade,
-  full_name      text not null,
-  email          text,
-  phone          text not null,
-  date_of_birth  date,
-  address        text,
-  medical_info   text,
-  waiver_version text not null,
-  accepted_at    timestamptz not null default now()
+  id          uuid primary key default gen_random_uuid(),
+  member_id   uuid not null references public.members (id) on delete cascade,
+  accepted_at timestamptz not null default now()
 );
 
 create index if not exists consents_member_idx on public.consents (member_id);

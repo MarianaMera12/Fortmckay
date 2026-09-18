@@ -19,6 +19,9 @@ export type Database = {
           email: string | null;
           membership_status: "active" | "paused" | "inactive";
           member_id: string | null;
+          address: string | null;
+          medical_info: string | null;
+          has_consent: boolean;
           created_at: string;
         };
         Insert: {
@@ -29,6 +32,9 @@ export type Database = {
           email?: string | null;
           membership_status?: "active" | "paused" | "inactive";
           member_id?: string | null;
+          address?: string | null;
+          medical_info?: string | null;
+          has_consent?: boolean;
           created_at?: string;
         };
         Update: {
@@ -39,6 +45,9 @@ export type Database = {
           email?: string | null;
           membership_status?: "active" | "paused" | "inactive";
           member_id?: string | null;
+          address?: string | null;
+          medical_info?: string | null;
+          has_consent?: boolean;
           created_at?: string;
         };
         Relationships: [];

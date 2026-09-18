@@ -18,21 +18,23 @@ const styles = StyleSheet.create({
 });
 
 function ConsentPdf({ consent }: { consent: Consent }) {
+  const member = consent.members ?? null;
+  const memberName = member ? `${member.first_name} ${member.last_name}`.trim() : "Member";
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <Text style={styles.title}>{WAIVER_TITLE}</Text>
 
         <View style={styles.summaryBox}>
-          <Text style={styles.row}>Name: {consent.full_name}</Text>
-          <Text style={styles.row}>Email: {consent.email ?? "—"}</Text>
-          <Text style={styles.row}>Phone: {consent.phone}</Text>
-          <Text style={styles.row}>Date of birth: {consent.date_of_birth ?? "—"}</Text>
-          <Text style={styles.row}>Address: {consent.address ?? "—"}</Text>
-          <Text style={styles.row}>Medical information: {consent.medical_info ?? "—"}</Text>
+          <Text style={styles.row}>Name: {memberName}</Text>
+          <Text style={styles.row}>Email: {member?.email ?? "—"}</Text>
+          <Text style={styles.row}>Phone: {member?.phone ?? "—"}</Text>
+          <Text style={styles.row}>Date of birth: {member?.date_of_birth ?? "—"}</Text>
+          <Text style={styles.row}>Address: {member?.address ?? "—"}</Text>
+          <Text style={styles.row}>Medical information: {member?.medical_info ?? "—"}</Text>
           <Text style={styles.row}>
-            Accepted: {new Date(consent.accepted_at).toLocaleString()} (waiver{" "}
-            {consent.waiver_version})
+            Accepted: {new Date(consent.accepted_at).toLocaleString()}
           </Text>
         </View>
 
@@ -69,7 +71,9 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   const { data: consent, error } = await supabase
     .from("consents")
-    .select("*")
+    .select(
+      "id, member_id, accepted_at, members:member_id(id, first_name, last_name, phone, email, member_id, date_of_birth, address, medical_info)"
+    )
     .eq("id", params.id)
     .single();
 
@@ -77,8 +81,17 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const buffer = await renderToBuffer(<ConsentPdf consent={consent as Consent} />);
-  const safeName = (consent.full_name as string).replace(/[^a-z0-9]+/gi, "-").toLowerCase();
+  const normalizedConsent: Consent = {
+    id: consent.id,
+    member_id: consent.member_id,
+    accepted_at: consent.accepted_at,
+    members: (consent.members as Consent["members"]) ?? null,
+  };
+
+  const buffer = await renderToBuffer(<ConsentPdf consent={normalizedConsent} />);
+  const safeName = ((normalizedConsent.members ? `${normalizedConsent.members.first_name} ${normalizedConsent.members.last_name}` : "member") as string)
+    .replace(/[^a-z0-9]+/gi, "-")
+    .toLowerCase();
 
   return new NextResponse(buffer, {
     headers: {

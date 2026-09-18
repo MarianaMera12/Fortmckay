@@ -20,6 +20,7 @@ const EMPTY: MemberInput = {
   date_of_birth: "",
   address: "",
   medical_info: "",
+  has_consent: true,
 };
 
 interface Props {
@@ -52,6 +53,7 @@ export function MemberFormModal({ open, member, onClose, onSaved }: Props) {
             date_of_birth: member.date_of_birth ?? "",
             address: member.address ?? "",
             medical_info: member.medical_info ?? "",
+            has_consent: member.has_consent ?? true,
           }
         : EMPTY
     );
@@ -92,17 +94,23 @@ export function MemberFormModal({ open, member, onClose, onSaved }: Props) {
     setError("");
     try {
       const created = await createMember(form);
-      await createConsent({
-        member_id: created.id,
-        full_name: fullName(created),
-        email: form.email,
-        phone: form.phone,
-        date_of_birth: form.date_of_birth,
-        address: form.address,
-        medical_info: form.medical_info,
-      });
+
+      try {
+        await createConsent({
+          member_id: created.id,
+        });
+      } catch (consentError) {
+        console.error("Member created but consent creation failed:", consentError);
+        setError(
+          "Member saved, but the waiver could not be stored. Please re-open the member and try the waiver again."
+        );
+        onSaved();
+        return;
+      }
+
       onSaved();
-    } catch {
+    } catch (memberError) {
+      console.error("Member creation failed:", memberError);
       setError("Could not save the member. Please try again.");
       setStep("form");
     } finally {

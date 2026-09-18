@@ -53,13 +53,15 @@ export async function searchMembers(term: string, limit = 6): Promise<Member[]> 
 }
 
 function toRow(input: MemberInput) {
+  const { date_of_birth: _dateOfBirth, ...rest } = input;
+
   return {
-    ...input,
+    ...rest,
     email: input.email || null,
     member_id: input.member_id || null,
-    date_of_birth: input.date_of_birth || null,
     address: input.address || null,
     medical_info: input.medical_info || null,
+    has_consent: Boolean(input.has_consent),
   };
 }
 
