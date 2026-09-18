@@ -11,6 +11,7 @@ create table if not exists public.members (
   membership_status text not null default 'active'
                     check (membership_status in ('active','paused','inactive')),
   member_id         text unique,
+  date_of_birth     date,
   address           text,
   medical_info      text,
   has_consent       bool not null default true,
