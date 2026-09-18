@@ -5,14 +5,10 @@ export default function PublicPortalPage() {
   return (
     <div className="min-h-screen bg-cream">
       <header className="flex flex-wrap items-center gap-4 bg-sidebar px-6 py-5 text-white sm:px-8">
-        <span className="flex h-11 w-11 items-center justify-center rounded-full border border-gold/60 font-display text-[15px] text-[#e6dcc8]">
-          FM
+        <span className="flex  items-center justify-center">
+          <img src="/logo.png" alt="Logo" className="object-contain w-48 h-13" />
         </span>
         <span className="flex-1 font-display leading-tight">
-          <span className="block text-[19px] tracking-[2.5px]">FORT McKAY</span>
-          <span className="block text-[9.5px] tracking-[3px] text-white/50">
-            FIRST NATION · FITNESS CENTRE
-          </span>
         </span>
         <Link
           href="/login"

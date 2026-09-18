@@ -10,6 +10,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -40,7 +41,22 @@ export default function LoginPage() {
 
         <div className="flex flex-col gap-3.5">
           <Field label="Email" type="email" value={email} onChange={setEmail} />
-          <Field label="Password" type="text" value={password} onChange={setPassword} />
+
+          <div className="relative">
+            <Field
+              label="Password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={setPassword}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+              className="absolute right-3 top-[30px] text-[12px] font-medium text-black/55"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
         </div>
 
         {error && <p className="mt-3 text-[13.5px] text-danger">{error}</p>}

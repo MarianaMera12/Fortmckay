@@ -5,7 +5,7 @@ interface FieldProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  type?: "text" | "email" | "tel" | "date" | "time" | "number";
+  type?: "text" | "email" | "tel" | "date" | "time" | "number" | "password";
 }
 
 export function Field({ label, value, onChange, placeholder, type = "text" }: FieldProps) {
