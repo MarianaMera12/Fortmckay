@@ -85,7 +85,9 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     id: consent.id,
     member_id: consent.member_id,
     accepted_at: consent.accepted_at,
-    members: (consent.members as Consent["members"]) ?? null,
+    members: Array.isArray(consent.members)
+      ? consent.members[0] ?? null
+      : consent.members ?? null,
   };
 
   const buffer = await renderToBuffer(<ConsentPdf consent={normalizedConsent} />);
@@ -93,7 +95,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     .replace(/[^a-z0-9]+/gi, "-")
     .toLowerCase();
 
-  return new NextResponse(buffer, {
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="waiver-${safeName}.pdf"`,

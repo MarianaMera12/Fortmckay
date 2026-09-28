@@ -39,6 +39,8 @@ export async function getConsentByMemberId(memberId: string): Promise<Consent | 
     id: data.id,
     member_id: data.member_id,
     accepted_at: data.accepted_at,
-    members: (data.members as Member | null) ?? null,
+    members: Array.isArray(data.members)
+      ? data.members[0] ?? null
+      : data.members ?? null,
   };
 }
