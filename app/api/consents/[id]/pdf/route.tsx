@@ -96,13 +96,21 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     };
 
     const buffer = await renderToBuffer(<ConsentPdf consent={normalizedConsent} />);
-    const safeName = ((normalizedConsent.members ? `${normalizedConsent.members.first_name} ${normalizedConsent.members.last_name}` : "member") as string)
+
+    const safeName = (
+      normalizedConsent.members
+        ? `${normalizedConsent.members.first_name} ${normalizedConsent.members.last_name}`
+        : "member"
+    )
       .replace(/[^a-z0-9]+/gi, "-")
       .toLowerCase();
 
-    const uint8Array = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+    const arrayBuffer = new ArrayBuffer(buffer.byteLength);
+    new Uint8Array(arrayBuffer).set(buffer);
 
-    const pdfBlob = new Blob([buffer], { type: "application/pdf" });
+    const pdfBlob = new Blob([arrayBuffer], {
+      type: "application/pdf",
+    });
 
     return new NextResponse(pdfBlob, {
       status: 200,
