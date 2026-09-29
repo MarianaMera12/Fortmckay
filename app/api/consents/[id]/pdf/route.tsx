@@ -4,6 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { WAIVER_SECTIONS, WAIVER_TITLE } from "@/lib/waiver";
 import type { Consent } from "@/lib/types";
 
+// Configuración de ejecución para Vercel Serverless
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: "Helvetica" },
   title: { fontSize: 14, marginBottom: 12, fontFamily: "Helvetica-Bold" },
@@ -60,45 +64,55 @@ function ConsentPdf({ consent }: { consent: Consent }) {
 }
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { data: consent, error } = await supabase
+      .from("consents")
+      .select(
+        "id, member_id, accepted_at, members:member_id(id, first_name, last_name, phone, email, member_id, date_of_birth, address, medical_info)"
+      )
+      .eq("id", params.id)
+      .single();
+
+    if (error || !consent) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const normalizedConsent: Consent = {
+      id: consent.id,
+      member_id: consent.member_id,
+      accepted_at: consent.accepted_at,
+      members: Array.isArray(consent.members)
+        ? consent.members[0] ?? null
+        : consent.members ?? null,
+    };
+
+    const buffer = await renderToBuffer(<ConsentPdf consent={normalizedConsent} />);
+    const safeName = ((normalizedConsent.members ? `${normalizedConsent.members.first_name} ${normalizedConsent.members.last_name}` : "member") as string)
+      .replace(/[^a-z0-9]+/gi, "-")
+      .toLowerCase();
+
+    const uint8Array = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+
+    const pdfBlob = new Blob([buffer], { type: "application/pdf" });
+
+    return new NextResponse(pdfBlob, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="waiver-${safeName}.pdf"`,
+      },
+    });
+  } catch (err) {
+    console.error("Error generando PDF en Vercel:", err);
+    return NextResponse.json({ error: "Error al generar el PDF" }, { status: 500 });
   }
-
-  const { data: consent, error } = await supabase
-    .from("consents")
-    .select(
-      "id, member_id, accepted_at, members:member_id(id, first_name, last_name, phone, email, member_id, date_of_birth, address, medical_info)"
-    )
-    .eq("id", params.id)
-    .single();
-
-  if (error || !consent) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
-  }
-
-  const normalizedConsent: Consent = {
-    id: consent.id,
-    member_id: consent.member_id,
-    accepted_at: consent.accepted_at,
-    members: Array.isArray(consent.members)
-      ? consent.members[0] ?? null
-      : consent.members ?? null,
-  };
-
-  const buffer = await renderToBuffer(<ConsentPdf consent={normalizedConsent} />);
-  const safeName = ((normalizedConsent.members ? `${normalizedConsent.members.first_name} ${normalizedConsent.members.last_name}` : "member") as string)
-    .replace(/[^a-z0-9]+/gi, "-")
-    .toLowerCase();
-
-  return new NextResponse(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="waiver-${safeName}.pdf"`,
-    },
-  });
 }
