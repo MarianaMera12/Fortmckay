@@ -95,13 +95,19 @@ set search_path = public
 as $$
 declare
   v_capacity int;
+  v_date     date;
+  v_start    time;
   v_taken    int;
 begin
-  select capacity into v_capacity
+  select capacity, date, start_time into v_capacity, v_date, v_start
     from classes where id = p_class_id for update;
 
   if v_capacity is null then
     raise exception 'CLASS_NOT_FOUND';
+  end if;
+
+  if (v_date + v_start) < now() then
+    raise exception 'CLASS_PAST';
   end if;
 
   select count(*) into v_taken

@@ -8,6 +8,13 @@ export class ClassFullError extends Error {
   }
 }
 
+export class ClassPastError extends Error {
+  constructor() {
+    super("This class has already happened.");
+    this.name = "ClassPastError";
+  }
+}
+
 /**
  * Public reservation. Capacity is enforced by the `reserve_class` Postgres
  * function (see supabase/schema.sql) so two simultaneous requests can never
@@ -26,6 +33,7 @@ export async function reserveClass(
   });
   if (error) {
     if (error.message.includes("CLASS_FULL")) throw new ClassFullError();
+    if (error.message.includes("CLASS_PAST")) throw new ClassPastError();
     throw error;
   }
 }

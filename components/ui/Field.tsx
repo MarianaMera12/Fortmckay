@@ -6,9 +6,10 @@ interface FieldProps {
   onChange: (value: string) => void;
   placeholder?: string;
   type?: "text" | "email" | "tel" | "date" | "time" | "number" | "password";
+  min?: string;
 }
 
-export function Field({ label, value, onChange, placeholder, type = "text" }: FieldProps) {
+export function Field({ label, value, onChange, placeholder, type = "text", min }: FieldProps) {
   return (
     <label className="flex flex-col gap-1.5 text-[13.5px] text-black/55">
       {label}
@@ -17,6 +18,7 @@ export function Field({ label, value, onChange, placeholder, type = "text" }: Fi
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        min={min}
         className="min-h-[44px] rounded-xl border border-black/10 bg-cream px-3 text-[15px] text-ink outline-none focus:border-blue"
       />
     </label>

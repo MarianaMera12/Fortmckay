@@ -45,7 +45,12 @@ export function PublicSchedule() {
   return (
     <>
       <div className="my-6 flex items-center gap-3.5">
-        <Button variant="ghost" onClick={() => setOffset((o) => o - 1)} aria-label="Previous week">
+        <Button
+          variant="ghost"
+          disabled={offset <= 0}
+          onClick={() => setOffset((o) => Math.max(0, o - 1))}
+          aria-label="Previous week"
+        >
           ‹
         </Button>
         <span className="text-[15.5px]">{weekLabel(weekStart)}</span>
@@ -67,6 +72,7 @@ export function PublicSchedule() {
             <ul className="mt-3.5 flex flex-col gap-3">
               {d.items.map((c) => {
                 const full = c.reserved >= c.capacity;
+                const past = new Date(`${c.date}T${c.start_time}`) < new Date();
                 return (
                   <li key={c.id} className="rounded-xl border border-black/5 p-3.5">
                     <p className="text-base font-medium">{c.name}</p>
@@ -74,12 +80,16 @@ export function PublicSchedule() {
                       {formatTime(c.start_time)} – {formatTime(c.end_time)} · {c.instructor}
                     </p>
                     <div className="mt-3 flex items-center justify-between gap-2.5">
-                      <span className={`text-[13px] ${full ? "text-danger" : "text-ok"}`}>
-                        {full ? "Class full" : `${c.capacity - c.reserved} of ${c.capacity} left`}
+                      <span className={`text-[13px] ${past ? "text-black/40" : full ? "text-danger" : "text-ok"}`}>
+                        {past
+                          ? "Class ended"
+                          : full
+                          ? "Class full"
+                          : `${c.capacity - c.reserved} of ${c.capacity} left`}
                       </span>
                       <Button
                         variant="gold"
-                        disabled={full}
+                        disabled={full || past}
                         onClick={() => setSelected(c)}
                       >
                         Reserve

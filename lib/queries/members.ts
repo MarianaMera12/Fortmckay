@@ -9,6 +9,13 @@ export interface MembersQuery {
   page?: number;
 }
 
+/** `,` `(` `)` have structural meaning in PostgREST's `.or()` filter syntax
+ *  — strip them so a search term can't break out of its own ilike clause
+ *  and inject extra filter conditions. */
+function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[,()]/g, "");
+}
+
 export async function listMembers({
   search = "",
   status = "all",
@@ -23,7 +30,7 @@ export async function listMembers({
 
   if (status !== "all") query = query.eq("membership_status", status);
 
-  const term = search.trim();
+  const term = sanitizeSearchTerm(search.trim());
   if (term) {
     const like = `%${term}%`;
     query = query.or(
@@ -37,7 +44,7 @@ export async function listMembers({
 }
 
 export async function searchMembers(term: string, limit = 6): Promise<Member[]> {
-  const trimmed = term.trim();
+  const trimmed = sanitizeSearchTerm(term.trim());
   if (!trimmed) return [];
   const supabase = createClient();
   const like = `%${trimmed}%`;

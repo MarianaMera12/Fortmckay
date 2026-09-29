@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
-import { ClassFullError, reserveClass } from "@/lib/queries/reservations";
+import { ClassFullError, ClassPastError, reserveClass } from "@/lib/queries/reservations";
 import type { ClassWithCount, ReservationInput } from "@/lib/types";
 import { formatTime, isValidEmail } from "@/lib/utils";
 
@@ -49,6 +49,8 @@ export function ReserveModal({
       setError(
         e instanceof ClassFullError
           ? "Sorry, this class just reached maximum capacity."
+          : e instanceof ClassPastError
+          ? "This class has already happened and can no longer be reserved."
           : "Could not save your reservation. Please try again."
       );
     } finally {

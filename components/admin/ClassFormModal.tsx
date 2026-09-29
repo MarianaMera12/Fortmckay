@@ -6,6 +6,7 @@ import { Field } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { createClass, updateClass } from "@/lib/queries/classes";
 import type { ClassInput, ClassWithCount } from "@/lib/types";
+import { toISODate } from "@/lib/utils";
 
 interface Props {
   open: boolean;
@@ -33,6 +34,7 @@ export function ClassFormModal({
   const [form, setForm] = useState<ClassInput>(empty);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const today = toISODate(new Date());
 
   useEffect(() => {
     setError("");
@@ -54,6 +56,10 @@ export function ClassFormModal({
   async function save() {
     if (!form.name || !form.instructor || !form.date) {
       setError("Class name, instructor and date are required.");
+      return;
+    }
+    if (!gymClass && form.date < today) {
+      setError("Class date can't be in the past.");
       return;
     }
     if (form.end_time <= form.start_time) {
@@ -95,6 +101,7 @@ export function ClassFormModal({
           type="date"
           value={form.date}
           onChange={(v) => setForm((f) => ({ ...f, date: v }))}
+          min={gymClass ? undefined : today}
         />
         <Field
           label="Max capacity"
