@@ -2,12 +2,19 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+
 import { PageHeader } from "@/components/admin/PageHeader";
 import { AttendanceChart } from "@/components/admin/AttendanceChart";
 import { QuickCheckIn } from "@/components/admin/QuickCheckIn";
 import { Card, CardTitle } from "@/components/ui/Card";
 import { StatusChip } from "@/components/ui/StatusChip";
-import { listRecentActivity } from "@/lib/queries/attendance";
+import {
+  checkIn,
+  checkOut,
+  getOpenSessions,
+  listRecentActivity,
+} from "@/lib/queries/attendance";
 import { listClassesForDate } from "@/lib/queries/classes";
 import { getDashboardStats } from "@/lib/queries/stats";
 import type { AttendanceWithMember, ClassWithCount, DashboardStats } from "@/lib/types";
@@ -17,6 +24,9 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activity, setActivity] = useState<AttendanceWithMember[]>([]);
   const [todayClasses, setTodayClasses] = useState<ClassWithCount[]>([]);
+  const [openSessions, setOpenSessions] = useState<Record<string, string>>({});
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [attendanceError, setAttendanceError] = useState("");
 
   const load = useCallback(async () => {
     const [s, a, c] = await Promise.all([
@@ -27,11 +37,30 @@ export default function DashboardPage() {
     setStats(s);
     setActivity(a);
     setTodayClasses(c);
+    const memberIds = a
+      .map((row) => row.members?.id)
+      .filter((id): id is string => Boolean(id));
+    setOpenSessions(await getOpenSessions(memberIds));
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  async function toggleAttendance(memberId: string) {
+    setBusyId(memberId);
+    setAttendanceError("");
+    try {
+      const sessionId = openSessions[memberId];
+      if (sessionId) await checkOut(sessionId);
+      else await checkIn(memberId);
+      await load();
+    } catch {
+      setAttendanceError("Could not update attendance. Please try again.");
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   const kpis = [
     { label: "Currently inside", value: stats?.occupancy, note: "live occupancy" },
@@ -58,26 +87,43 @@ export default function DashboardPage() {
         <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
           <Card>
             <CardTitle>Recent check-ins</CardTitle>
+            {attendanceError && (
+              <p className="mb-3 text-[13.5px] text-danger">{attendanceError}</p>
+            )}
             <ul className="divide-y divide-black/5">
-              {activity.map((row) => (
-                <li key={row.id} className="flex items-center gap-3 py-3">
-                  <span className="h-9 w-9 shrink-0 rounded-full bg-black/5" aria-hidden />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[14.5px]">
-                      {row.members
-                        ? `${row.members.first_name} ${row.members.last_name}`
-                        : "Member"}
+              {activity.map((row) => {
+                const memberId = row.members?.id;
+                const inside = Boolean(memberId && openSessions[memberId]);
+                return (
+                  <li key={row.id} className="flex items-center gap-3 py-3">
+                    <span className="h-9 w-9 shrink-0 rounded-full bg-black/5" aria-hidden />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[14.5px]">
+                        {row.members
+                          ? `${row.members.first_name} ${row.members.last_name}`
+                          : "Member"}
+                      </span>
+                      <span className="block text-[12.5px] text-black/40">
+                        {row.members?.member_id ?? ""}
+                      </span>
                     </span>
-                    <span className="block text-[12.5px] text-black/40">
-                      {row.members?.member_id ?? ""}
+                    <span className="text-sm text-black/60">
+                      {formatTimestamp(row.check_in)}
                     </span>
-                  </span>
-                  <span className="text-sm text-black/60">
-                    {formatTimestamp(row.check_in)}
-                  </span>
-                  <StatusChip inside={!row.check_out} />
-                </li>
-              ))}
+                    <StatusChip inside={inside} />
+                    {inside && memberId && (
+                      <Button
+                        variant="primary"
+                        disabled={busyId === memberId}
+                        onClick={() => void toggleAttendance(memberId)}
+                      >
+                        Check-out
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+
               {activity.length === 0 && (
                 <li className="py-8 text-center text-sm text-black/40">
                   No check-ins yet today.

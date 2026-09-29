@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { AttendanceWithMember } from "@/lib/types";
 
 const WITH_MEMBER =
-  "id, member_id, check_in, check_out, members(first_name, last_name, phone, member_id)";
+  "id, member_id, check_in, check_out, members(id, first_name, last_name, phone, member_id)";
 
 export async function getOccupancy(): Promise<number> {
   const supabase = createClient();

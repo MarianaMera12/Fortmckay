@@ -23,7 +23,7 @@ export interface Attendance {
 }
 
 export interface AttendanceWithMember extends Attendance {
-  members: Pick<Member, "first_name" | "last_name" | "phone" | "member_id"> | null;
+  members: Pick<Member, "id" | "first_name" | "last_name" | "phone" | "member_id"> | null;
 }
 
 export interface GymClass {
