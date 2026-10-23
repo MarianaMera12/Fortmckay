@@ -8,6 +8,13 @@ export class ClassFullError extends Error {
   }
 }
 
+export class AlreadyReservedError extends Error {
+  constructor() {
+    super("This email already has a reservation for this class.");
+    this.name = "AlreadyReservedError";
+  }
+}
+
 export class ClassPastError extends Error {
   constructor() {
     super("This class has already happened.");
@@ -34,6 +41,7 @@ export async function reserveClass(
   if (error) {
     if (error.message.includes("CLASS_FULL")) throw new ClassFullError();
     if (error.message.includes("CLASS_PAST")) throw new ClassPastError();
+    if (error.message.includes("ALREADY_RESERVED")) throw new AlreadyReservedError();
     throw error;
   }
 }

@@ -4,7 +4,12 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
-import { ClassFullError, ClassPastError, reserveClass } from "@/lib/queries/reservations";
+import {
+  AlreadyReservedError,
+  ClassFullError,
+  ClassPastError,
+  reserveClass,
+} from "@/lib/queries/reservations";
 import type { ClassWithCount, ReservationInput } from "@/lib/types";
 import { formatTime, isValidEmail } from "@/lib/utils";
 
@@ -14,10 +19,13 @@ export function ReserveModal({
   gymClass,
   onClose,
   onReserved,
+  onBooked,
 }: {
   gymClass: ClassWithCount | null;
   onClose: () => void;
   onReserved: () => void;
+  /** Fires the moment the booking succeeds, so the schedule's counter can refresh behind the modal. */
+  onBooked?: () => void;
 }) {
   const [form, setForm] = useState<ReservationInput>(EMPTY);
   const [error, setError] = useState("");
@@ -45,12 +53,15 @@ export function ReserveModal({
     try {
       await reserveClass(gymClass!.id, form);
       setDone(true);
+      onBooked?.();
     } catch (e) {
       setError(
         e instanceof ClassFullError
           ? "Sorry, this class just reached maximum capacity."
           : e instanceof ClassPastError
           ? "This class has already happened and can no longer be reserved."
+          : e instanceof AlreadyReservedError
+          ? "You're already booked into this class with that email — no need to book again."
           : "Could not save your reservation. Please try again."
       );
     } finally {
@@ -60,14 +71,17 @@ export function ReserveModal({
 
   if (done) {
     return (
-      <Modal open title="You're booked" onClose={onReserved}>
+      <Modal open title="Reservation confirmed" onClose={onReserved}>
         <div className="flex flex-col items-center gap-3.5 py-3 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-gold text-2xl text-white">
             ✓
           </span>
+          <p className="max-w-xs text-lg font-medium">Your spot is saved.</p>
           <p className="max-w-xs text-[15.5px] text-black/70">
-            {gymClass.name} — {gymClass.date} at {formatTime(gymClass.start_time)}. A
-            confirmation was sent to {form.email}.
+            {gymClass.name} — {gymClass.date} at {formatTime(gymClass.start_time)}.
+          </p>
+          <p className="max-w-xs text-[13.5px] text-black/50">
+            You don&apos;t need to book again. See you there!
           </p>
           <Button className="mt-2" onClick={onReserved}>
             Done

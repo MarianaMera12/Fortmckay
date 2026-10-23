@@ -84,8 +84,8 @@ export function PublicSchedule() {
                         {past
                           ? "Class ended"
                           : full
-                          ? "Class full"
-                          : `${c.capacity - c.reserved} of ${c.capacity} left`}
+                          ? `Class full · ${c.reserved}/${c.capacity}`
+                          : `${c.reserved}/${c.capacity} reserved · ${c.capacity - c.reserved} left`}
                       </span>
                       <Button
                         variant="gold"
@@ -109,6 +109,7 @@ export function PublicSchedule() {
       <ReserveModal
         gymClass={selected}
         onClose={() => setSelected(null)}
+        onBooked={load}
         onReserved={() => {
           setSelected(null);
           load();

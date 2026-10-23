@@ -110,6 +110,15 @@ begin
     raise exception 'CLASS_PAST';
   end if;
 
+  if exists (
+    select 1 from reservations
+     where class_id = p_class_id
+       and status = 'confirmed'
+       and lower(trim(email)) = lower(trim(p_email))
+  ) then
+    raise exception 'ALREADY_RESERVED';
+  end if;
+
   select count(*) into v_taken
     from reservations
    where class_id = p_class_id and status = 'confirmed';
@@ -119,7 +128,7 @@ begin
   end if;
 
   insert into reservations (class_id, name, phone, email)
-  values (p_class_id, p_name, p_phone, p_email);
+  values (p_class_id, trim(p_name), trim(p_phone), lower(trim(p_email)));
 end;
 $$;
 
