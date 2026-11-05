@@ -33,7 +33,12 @@ export default function CalendarPage() {
   const load = useCallback(() => {
     setError("");
     listWeekClasses(weekStart)
-      .then(setClasses)
+      .then((rows) => {
+        setClasses(rows);
+        setViewing((current) =>
+          current ? rows.find((gymClass) => gymClass.id === current.id) ?? current : null
+        );
+      })
       .catch(() => {
         setClasses([]);
         setError("Could not load classes. Please try again.");
@@ -195,7 +200,11 @@ export default function CalendarPage() {
           load();
         }}
       />
-      <ReservationsModal gymClass={viewing} onClose={() => setViewing(null)} />
+      <ReservationsModal
+        gymClass={viewing}
+        onClose={() => setViewing(null)}
+        onChanged={load}
+      />
     </>
   );
 }

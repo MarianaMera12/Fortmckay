@@ -82,3 +82,17 @@ export async function listReservations(classId: string): Promise<Reservation[]> 
   if (error) throw error;
   return (data ?? []) as Reservation[];
 }
+
+export async function cancelReservation(reservationId: string): Promise<void> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("reservations")
+    .update({ status: "cancelled" })
+    .eq("id", reservationId)
+    .eq("status", "confirmed")
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("Reservation is no longer active.");
+}
