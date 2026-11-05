@@ -13,7 +13,7 @@ import {
 export function AttendanceChart({
   data,
 }: {
-  data: { hour: string; visits: number }[];
+  data: { label: string; visits: number }[];
 }) {
   return (
     <div className="h-[240px] w-full">
@@ -21,7 +21,7 @@ export function AttendanceChart({
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -20 }}>
           <CartesianGrid vertical={false} stroke="#00000010" />
           <XAxis
-            dataKey="hour"
+            dataKey="label"
             tickLine={false}
             axisLine={false}
             tick={{ fontSize: 12, fill: "#6e6f72" }}

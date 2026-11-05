@@ -17,8 +17,47 @@ import {
 } from "@/lib/queries/attendance";
 import { listClassesForDate } from "@/lib/queries/classes";
 import { getDashboardStats } from "@/lib/queries/stats";
-import type { AttendanceWithMember, ClassWithCount, DashboardStats } from "@/lib/types";
-import { formatTime, formatTimestamp } from "@/lib/utils";
+import type {
+  AttendanceTimeframe,
+  AttendanceWithMember,
+  ClassWithCount,
+  DashboardStats,
+} from "@/lib/types";
+import {
+  addDays,
+  formatTime,
+  formatTimestamp,
+  MONTHS,
+  startOfWeek,
+  weekLabel,
+} from "@/lib/utils";
+
+function getPeriodStart(date: Date, timeframe: AttendanceTimeframe): Date {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+
+  if (timeframe === "Weekly") return startOfWeek(start);
+  if (timeframe === "Monthly") return new Date(start.getFullYear(), start.getMonth(), 1);
+  return start;
+}
+
+function shiftPeriod(
+  date: Date,
+  timeframe: AttendanceTimeframe,
+  direction: -1 | 1
+): Date {
+  const periodStart = getPeriodStart(date, timeframe);
+  if (timeframe === "Daily") return addDays(periodStart, direction);
+  if (timeframe === "Weekly") return addDays(periodStart, direction * 7);
+
+  return new Date(periodStart.getFullYear(), periodStart.getMonth() + direction, 1);
+}
+
+function getPeriodLabel(date: Date, timeframe: AttendanceTimeframe): string {
+  if (timeframe === "Weekly") return weekLabel(startOfWeek(date));
+  if (timeframe === "Monthly") return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+  return `${MONTHS[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+}
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -27,10 +66,14 @@ export default function DashboardPage() {
   const [openSessions, setOpenSessions] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
   const [attendanceError, setAttendanceError] = useState("");
+  const [timeframe, setTimeframe] = useState<AttendanceTimeframe>("Daily");
+  const [selectedDate, setSelectedDate] = useState(() =>
+    getPeriodStart(new Date(), "Daily")
+  );
 
   const load = useCallback(async () => {
     const [s, a, c] = await Promise.all([
-      getDashboardStats(),
+      getDashboardStats(timeframe, selectedDate),
       listRecentActivity(8),
       listClassesForDate(new Date()),
     ]);
@@ -41,7 +84,7 @@ export default function DashboardPage() {
       .map((row) => row.members?.id)
       .filter((id): id is string => Boolean(id));
     setOpenSessions(await getOpenSessions(memberIds));
-  }, []);
+  }, [timeframe, selectedDate]);
 
   useEffect(() => {
     void load();
@@ -66,8 +109,11 @@ export default function DashboardPage() {
     { label: "Currently inside", value: stats?.occupancy, note: "live occupancy" },
     { label: "Visits today", value: stats?.visitsToday, note: "check-ins recorded" },
     { label: "Visits this week", value: stats?.visitsThisWeek, note: "since Monday" },
-    { label: "Avg. daily visits", value: stats?.avgDailyVisits, note: "this week" },
+    { label: "Visits this month", value: stats?.visitsThisMonth, note: "month to date" },
   ];
+  const nextDisabled =
+    getPeriodStart(selectedDate, timeframe).getTime() >=
+    getPeriodStart(new Date(), timeframe).getTime();
 
   return (
     <>
@@ -189,8 +235,43 @@ export default function DashboardPage() {
         </div>
 
         <Card>
-          <CardTitle>Attendance activity — today</CardTitle>
-          <AttendanceChart data={stats?.hourly ?? []} />
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <CardTitle>Attendance activity — {getPeriodLabel(selectedDate, timeframe)}</CardTitle>
+            <p id="visit-count">{stats ? `${stats.chartVisitCount} visits` : "— visits"}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="ghost"
+                className="px-3 text-sm"
+                aria-label="Previous period"
+                onClick={() => setSelectedDate((date) => shiftPeriod(date, timeframe, -1))}
+              >
+                Previous
+              </Button>
+              <select
+                id="timeframe"
+                value={timeframe}
+                onChange={(e) => {
+                  const nextTimeframe = e.target.value as AttendanceTimeframe;
+                  setTimeframe(nextTimeframe);
+                  setSelectedDate((date) => getPeriodStart(date, nextTimeframe));
+                }}
+                className="rounded-md border border-gray-300 bg-white py-2 px-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option>Daily</option>
+                <option>Weekly</option>
+                <option>Monthly</option>
+              </select>
+              <Button
+                variant="ghost"
+                className="px-3 text-sm"
+                disabled={nextDisabled}
+                aria-label="Next period"
+                onClick={() => setSelectedDate((date) => shiftPeriod(date, timeframe, 1))}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+          <AttendanceChart data={stats?.chartData ?? []} />
         </Card>
       </div>
     </>

@@ -95,7 +95,10 @@ export interface DashboardStats {
   occupancy: number;
   visitsToday: number;
   visitsThisWeek: number;
-  avgDailyVisits: number;
-  hourly: { hour: string; visits: number }[];
+  visitsThisMonth: number;
+  chartVisitCount: number;
+  chartData: { label: string; visits: number }[];
   topClasses: { name: string; reservations: number }[];
 }
+
+export type AttendanceTimeframe = "Daily" | "Weekly" | "Monthly";
